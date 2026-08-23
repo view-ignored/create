@@ -1,0 +1,38 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["import", "oxc", "unicorn", "jsdoc", "eslint", "typescript"],
+	"rules": {
+		"no-control-regex": "off",
+		"no-else-return": "error",
+		"no-lonely-if": "error",
+		"unicorn/no-lonely-if": "error",
+		"oxc/branches-sharing-code": "error",
+		"max-depth": "error",
+		"typescript/no-explicit-any": "error",
+		"typescript/restrict-template-expressions": "off",
+		"import/no-duplicates": "error",
+		"import/no-cycle": "error",
+		"sort-keys": ["error", "asc", { "natural": true }],
+		"oxc/no-map-spread": "error",
+		"oxc/no-accumulating-spread": "error",
+		"typescript/require-array-sort-compare": "off",
+		"unicorn/prefer-array-index-of": "error",
+		"unicorn/no-useless-iterator-to-array": "error",
+		"unicorn/no-new-array": "off",
+		"eslint/prefer-destructuring": "error",
+		"eslint/func-names": ["error", "always"],
+
+		"check-access": "warn"
+	},
+	"categories": {
+		"perf": "error"
+	},
+	"overrides": [
+		{
+			"files": ["src/test-npm-packlist/**/*.ts", "src/targets/**/*.test.ts"],
+			"rules": {
+				"sort-keys": "off"
+			}
+		}
+	]
+}

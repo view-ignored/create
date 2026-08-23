@@ -1,0 +1,73 @@
+{
+	"name": "@view-ignored/create",
+	"version": "0.1.0",
+	"description": "CLI generator to create custom view-ignored target plugin packages.",
+	"keywords": [
+		"create",
+		"generator",
+		"target",
+		"view-ignored"
+	],
+	"bugs": {
+		"url": "https://github.com/view-ignored/create/issues"
+	},
+	"license": "MIT",
+	"author": "Mopsgamer",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/view-ignored/create.git"
+	},
+	"bin": {
+		"vign-create": "./out/index.js"
+	},
+	"directories": {
+		"lib": "out"
+	},
+	"files": [
+		"/out"
+	],
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./out/index.d.ts",
+			"default": "./out/index.js"
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"check": "bun tsc -p src --noEmit",
+		"dev": "bun tsc -p src",
+		"prod": "rm -rf out && bun tsc -p src/tsconfig.prod.json --emitDeclarationOnly && bun tsc -p src/tsconfig.prod.json --removeComments -d false && (mv .gitignore .gitignore.tmp 2>/dev/null || true); oxfmt out; (mv .gitignore.tmp .gitignore 2>/dev/null || true)",
+		"lint": "bun run oxlint --type-aware",
+		"fmt": "bun run oxfmt",
+		"test": "bun test --timeout 5000 src",
+		"publint": "publint",
+		"node-compat": "bun run node-compat-22 && bun run node-compat-24",
+		"ts-compat": "bun run ts-compat-6 && bun run ts-compat-5",
+		"node-compat-24": "node ../../node_modules/typescript6/bin/tsc -p src/tsconfig.prod24.json --noEmit",
+		"node-compat-22": "node ../../node_modules/typescript6/bin/tsc -p src/tsconfig.prod22.json --noEmit",
+		"ts-compat-5": "node ../../node_modules/typescript5/bin/tsc -p src/tsconfig.prod.json --noEmit --resolveJsonModule",
+		"ts-compat-6": "node ../../node_modules/typescript6/bin/tsc -p src/tsconfig.prod.json --noEmit"
+	},
+	"devDependencies": {
+		"@release-it/keep-a-changelog": "latest",
+		"@types/bun": "latest",
+		"@types/node": "npm:@types/node@latest",
+		"@types/node-22": "npm:@types/node@^22.20.1",
+		"@types/node-24": "npm:@types/node@^24.13.3",
+		"bun-types": "latest",
+		"oxfmt": "latest",
+		"oxlint": "latest",
+		"oxlint-tsgolint": "latest",
+		"publint": "latest",
+		"release-it": "latest",
+		"typescript": "npm:typescript@^7.0.2",
+		"typescript5": "npm:typescript@~5.7.3",
+		"typescript6": "npm:typescript@^6.0.3"
+	},
+	"engines": {
+		"node": ">=22"
+	}
+}

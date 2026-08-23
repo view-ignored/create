@@ -1,0 +1,11 @@
+{
+	"extends": "./tsconfig.prod.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"lib": ["es2024"],
+		"target": "es2024",
+		"paths": {
+			"node": ["../../../node_modules/@types/node-24"]
+		}
+	}
+}

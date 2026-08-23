@@ -1,0 +1,75 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"icon": {
+				"id": "versions",
+				"color": "terminal.ansiRed"
+			},
+			"type": "bun",
+			"script": "release:major",
+			"label": "Release major - any backward incompatible changes"
+		},
+		{
+			"icon": {
+				"id": "versions",
+				"color": "terminal.ansiGreen"
+			},
+			"type": "bun",
+			"script": "release:minor",
+			"label": "Release minor - any new public functionality or deprecation"
+		},
+		{
+			"icon": {
+				"id": "versions",
+				"color": "terminal.ansiYellow"
+			},
+			"type": "bun",
+			"script": "release:patch",
+			"label": "Release patch - any backward compatible bug fixes"
+		},
+		{
+			"icon": {
+				"id": "package",
+				"color": "terminal.ansiWhite"
+			},
+			"problemMatcher": "$tsc",
+			"type": "bun",
+			"script": "build",
+			"label": "Build",
+			"detail": "bun run build"
+		},
+		{
+			"icon": {
+				"id": "package",
+				"color": "terminal.ansiWhite"
+			},
+			"problemMatcher": "$tsc-watch",
+			"type": "shell",
+			"command": "bun",
+			"label": "Build & Watch",
+			"detail": "bun run build --watch",
+			"args": ["run", "build", "--watch"]
+		},
+		{
+			"icon": {
+				"id": "sparkle",
+				"color": "terminal.ansiWhite"
+			},
+			"type": "bun",
+			"script": "lint",
+			"label": "Lint",
+			"detail": "bun run lint"
+		},
+		{
+			"icon": {
+				"id": "check-all",
+				"color": "terminal.ansiWhite"
+			},
+			"type": "bun",
+			"script": "test",
+			"label": "Test",
+			"detail": "bun run node --test out/**/*.test.js"
+		}
+	]
+}

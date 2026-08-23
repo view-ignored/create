@@ -1,0 +1,6 @@
+{
+	"js/ts.format.enabled": false,
+	"files.eol": "\n",
+	"js/ts.tsdk.path": "node_modules/typescript/lib",
+	"editor.defaultFormatter": "oxc.oxc-vscode"
+}
