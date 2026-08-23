@@ -12,7 +12,6 @@
 		"typescript/restrict-template-expressions": "off",
 		"import/no-duplicates": "error",
 		"import/no-cycle": "error",
-		"sort-keys": ["error", "asc", { "natural": true }],
 		"oxc/no-map-spread": "error",
 		"oxc/no-accumulating-spread": "error",
 		"typescript/require-array-sort-compare": "off",
@@ -26,13 +25,5 @@
 	},
 	"categories": {
 		"perf": "error"
-	},
-	"overrides": [
-		{
-			"files": ["src/test-npm-packlist/**/*.ts", "src/targets/**/*.test.ts"],
-			"rules": {
-				"sort-keys": "off"
-			}
-		}
-	]
+	}
 }
