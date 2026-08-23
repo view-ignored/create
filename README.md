@@ -11,7 +11,7 @@ Create public view-ignored target packages with Bun. ([Guide](https://github.com
 ## Quick Start
 
 ```txt
-Usage: create-view-ignored [target-name] [directory] [options]
+Usage: bunx @view-ignored <target-name> [directory] [options]
 
 Options:
   -f, --force         Overwrite existing directory if non-empty
