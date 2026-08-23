@@ -613,6 +613,7 @@ on:
           - patch
           - minor
           - major
+          - no-increment
       dry_run:
         description: Enable dry run
         required: false
@@ -654,10 +655,18 @@ jobs:
 
       - name: Run release
         run: |
-          if [ "\${{ inputs.dry_run }}" = "true" ]; then
-            bun run release:\${{ inputs.release_type }} --ci --dry-run --git.requireCleanWorkingDir=false
+          if [ "\${{ inputs.release_type }}" = "no-increment" ]; then
+            if [ "\${{ inputs.dry_run }}" = "true" ]; then
+              bun run --bun release-it --increment=false --ci --dry-run --git.requireCleanWorkingDir=false
+            else
+              bun run --bun release-it --increment=false --ci --git.requireCleanWorkingDir=false
+            fi
           else
-            bun run release:\${{ inputs.release_type }} --ci --git.requireCleanWorkingDir=false
+            if [ "\${{ inputs.dry_run }}" = "true" ]; then
+              bun run release:\${{ inputs.release_type }} --ci --dry-run --git.requireCleanWorkingDir=false
+            else
+              bun run release:\${{ inputs.release_type }} --ci --git.requireCleanWorkingDir=false
+            fi
           fi
 `
 
