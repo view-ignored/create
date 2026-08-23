@@ -84,85 +84,92 @@ export function createTargetPackage(
 
 	mkdirSync(resolve(outputDir, "src"), { recursive: true })
 
-	const packageJsonContent = JSON.stringify(
-		{
-			name: packageName,
-			version: "0.1.0",
-			description: `view-ignored target plugin for ${targetName}.`,
-			keywords: ["create", "generator", "target", "view-ignored", targetName.toLowerCase()],
-			bugs: {
-				url: `https://github.com/view-ignored/${packageName.replace(/^@view-ignored\//, "")}/issues`,
-			},
-			license: "MIT",
-			author: "@",
-			repository: {
-				type: "git",
-				url: `git+https://github.com/view-ignored/${packageName.replace(/^@view-ignored\//, "")}.git`,
-			},
-			directories: {
-				lib: "out",
-			},
-			files: ["/out"],
-			type: "module",
-			exports: {
-				".": {
-					types: "./out/index.d.ts",
-					default: "./out/index.js",
+	const packageJsonContent =
+		JSON.stringify(
+			{
+				name: packageName,
+				version: "0.1.0",
+				description: `view-ignored target plugin for ${targetName}.`,
+				keywords: [
+					"create",
+					targetName.toLowerCase(),
+					"generator",
+					"target",
+					"view-ignored",
+				].sort(),
+				bugs: {
+					url: `https://github.com/view-ignored/${packageName.replace(/^@view-ignored\//, "")}/issues`,
+				},
+				license: "MIT",
+				author: "@",
+				repository: {
+					type: "git",
+					url: `git+https://github.com/view-ignored/${packageName.replace(/^@view-ignored\//, "")}.git`,
+				},
+				directories: {
+					lib: "out",
+				},
+				files: ["/out"],
+				type: "module",
+				exports: {
+					".": {
+						types: "./out/index.d.ts",
+						default: "./out/index.js",
+					},
+				},
+				publishConfig: {
+					access: "public",
+				},
+				scripts: {
+					prerelease:
+						"bun check && bun run test && bun run prod && bun run lint && bun run fmt --check && bun run ts-compat && bun run node-compat && bun publint --pack npm --strict",
+					check: "bun tsc -p src --noEmit",
+					dev: "bun tsc -p src",
+					prod: "rm -rf out && bun tsc -p src/tsconfig.prod.json --emitDeclarationOnly && bun tsc -p src/tsconfig.prod.json --removeComments -d false && oxfmt ./out/**/*.js ./out/**/*.d.ts",
+					lint: "bun run oxlint --type-aware",
+					fmt: "bun run oxfmt",
+					test: "bun test --timeout 5000 src",
+					publint: "publint",
+					"node-compat": "bun run node-compat-22 && bun run node-compat-24",
+					"ts-compat": "bun run ts-compat-6 && bun run ts-compat-5",
+					"node-compat-24":
+						"node node_modules/typescript6/bin/tsc -p src/tsconfig.prod24.json --noEmit",
+					"node-compat-22":
+						"node node_modules/typescript6/bin/tsc -p src/tsconfig.prod22.json --noEmit",
+					"ts-compat-5":
+						"node node_modules/typescript5/bin/tsc -p src/tsconfig.prod.json --noEmit --resolveJsonModule",
+					"ts-compat-6": "node node_modules/typescript6/bin/tsc -p src/tsconfig.prod.json --noEmit",
+					"release:major": "bun run --bun release-it --increment=major",
+					"release:minor": "bun run --bun release-it --increment=minor",
+					"release:patch": "bun run --bun release-it --increment=patch",
+				},
+				devDependencies: {
+					"@release-it/keep-a-changelog": "latest",
+					"@types/bun": "latest",
+					"@types/node": "npm:@types/node@latest",
+					"@types/node-22": "npm:@types/node@^22.20.1",
+					"@types/node-24": "npm:@types/node@^24.13.3",
+					"bun-types": "latest",
+					oxfmt: "latest",
+					oxlint: "latest",
+					"oxlint-tsgolint": "latest",
+					publint: "latest",
+					"release-it": "latest",
+					typescript: "npm:typescript@^7.0.2",
+					typescript5: "npm:typescript@~5.7.3",
+					typescript6: "npm:typescript@^6.0.3",
+					"view-ignored": "latest",
+				},
+				peerDependencies: {
+					"view-ignored": "*",
+				},
+				engines: {
+					node: ">=22",
 				},
 			},
-			publishConfig: {
-				access: "public",
-			},
-			scripts: {
-				prerelease:
-					"bun check && bun run test && bun run prod && bun run lint && bun run fmt --check ./ ./out/**/*  && bun run ts-compat && bun run node-compat && bun publint --pack npm --strict",
-				check: "bun tsc -p src --noEmit",
-				dev: "bun tsc -p src",
-				prod: "rm -rf out && bun tsc -p src/tsconfig.prod.json --emitDeclarationOnly && bun tsc -p src/tsconfig.prod.json --removeComments -d false && oxfmt ./out/**/*",
-				lint: "bun run oxlint --type-aware",
-				fmt: "bun run oxfmt",
-				test: "bun test --timeout 5000 src",
-				publint: "publint",
-				"node-compat": "bun run node-compat-22 && bun run node-compat-24",
-				"ts-compat": "bun run ts-compat-6 && bun run ts-compat-5",
-				"node-compat-24":
-					"node node_modules/typescript6/bin/tsc -p src/tsconfig.prod24.json --noEmit",
-				"node-compat-22":
-					"node node_modules/typescript6/bin/tsc -p src/tsconfig.prod22.json --noEmit",
-				"ts-compat-5":
-					"node node_modules/typescript5/bin/tsc -p src/tsconfig.prod.json --noEmit --resolveJsonModule",
-				"ts-compat-6": "node node_modules/typescript6/bin/tsc -p src/tsconfig.prod.json --noEmit",
-				"release:major": "bun run --bun release-it --increment=major",
-				"release:minor": "bun run --bun release-it --increment=minor",
-				"release:patch": "bun run --bun release-it --increment=patch",
-			},
-			devDependencies: {
-				"@release-it/keep-a-changelog": "latest",
-				"@types/bun": "latest",
-				"@types/node": "npm:@types/node@latest",
-				"@types/node-22": "npm:@types/node@^22.20.1",
-				"@types/node-24": "npm:@types/node@^24.13.3",
-				"bun-types": "latest",
-				oxfmt: "latest",
-				oxlint: "latest",
-				"oxlint-tsgolint": "latest",
-				publint: "latest",
-				"release-it": "latest",
-				typescript: "npm:typescript@^7.0.2",
-				typescript5: "npm:typescript@~5.7.3",
-				typescript6: "npm:typescript@^6.0.3",
-				"view-ignored": "latest",
-			},
-			engines: {
-				node: ">=22",
-			},
-			peerDependencies: {
-				"view-ignored": "*",
-			},
-		},
-		null,
-		"\t",
-	)
+			null,
+			"\t",
+		) + "\n"
 
 	const indexTsContent = `import type { Target } from "view-ignored/targets"
 
@@ -255,52 +262,43 @@ describe("${functionName}", () => {
 }
 `
 
-	const tsconfigProdJsonContent = JSON.stringify(
-		{
-			compilerOptions: {
-				declaration: true,
-				declarationMap: false,
-				sourceMap: false,
-				types: ["node"],
-			},
-			exclude: ["**/*.test.*"],
-			extends: "./tsconfig.json",
-		},
-		null,
-		"\t",
-	)
+	const tsconfigProdJsonContent = `{
+	"compilerOptions": {
+		"declaration": true,
+		"declarationMap": false,
+		"sourceMap": false,
+		"types": ["node"]
+	},
+	"exclude": ["**/*.test.*"],
+	"extends": "./tsconfig.json"
+}
+`
 
-	const tsconfigProd22JsonContent = JSON.stringify(
-		{
-			compilerOptions: {
-				lib: ["es2024"],
-				noEmit: true,
-				paths: {
-					node: ["../../../node_modules/@types/node-22"],
-				},
-				target: "es2022",
-			},
-			extends: "./tsconfig.prod.json",
+	const tsconfigProd22JsonContent = `{
+	"compilerOptions": {
+		"lib": ["es2024"],
+		"noEmit": true,
+		"paths": {
+			"node": ["../node_modules/@types/node-22"]
 		},
-		null,
-		"\t",
-	)
+		"target": "es2022"
+	},
+	"extends": "./tsconfig.prod.json"
+}
+`
 
-	const tsconfigProd24JsonContent = JSON.stringify(
-		{
-			compilerOptions: {
-				lib: ["es2024"],
-				noEmit: true,
-				paths: {
-					node: ["../../../node_modules/@types/node-24"],
-				},
-				target: "es2024",
-			},
-			extends: "./tsconfig.prod.json",
+	const tsconfigProd24JsonContent = `{
+	"compilerOptions": {
+		"lib": ["es2024"],
+		"noEmit": true,
+		"paths": {
+			"node": ["../node_modules/@types/node-24"]
 		},
-		null,
-		"\t",
-	)
+		"target": "es2024"
+	},
+	"extends": "./tsconfig.prod.json"
+}
+`
 
 	const gitignoreContent = `node_modules
 out
@@ -316,89 +314,79 @@ deno.lock
 bin/**  eol=lf
 `
 
-	const oxfmtrcJsonContent = JSON.stringify(
-		{
-			$schema: "./node_modules/oxfmt/configuration_schema.json",
-			semi: false,
-			useTabs: true,
-			experimentalSortImports: {
-				groups: [
-					"type-import",
-					"type-internal",
-					["type-parent", "type-sibling", "type-index"],
-					["value-builtin", "value-external"],
-					"value-internal",
-					["value-parent", "value-sibling", "value-index"],
-					"unknown",
-				],
-			},
-		},
-		null,
-		"\t",
-	)
+	const oxfmtrcJsonContent = `{
+	"$schema": "./node_modules/oxfmt/configuration_schema.json",
+	"semi": false,
+	"useTabs": true,
+	"experimentalSortImports": {
+		"groups": [
+			"type-import",
+			"type-internal",
+			["type-parent", "type-sibling", "type-index"],
+			["value-builtin", "value-external"],
+			"value-internal",
+			["value-parent", "value-sibling", "value-index"],
+			"unknown"
+		]
+	}
+}
+`
 
-	const oxlintrcJsonContent = JSON.stringify(
-		{
-			$schema: "./node_modules/oxlint/configuration_schema.json",
-			plugins: ["import", "oxc", "unicorn", "jsdoc", "eslint", "typescript"],
-			rules: {
-				"no-control-regex": "off",
-				"no-else-return": "error",
-				"no-lonely-if": "error",
-				"unicorn/no-lonely-if": "error",
-				"oxc/branches-sharing-code": "error",
-				"max-depth": "error",
-				"typescript/no-explicit-any": "error",
-				"typescript/restrict-template-expressions": "off",
-				"import/no-duplicates": "error",
-				"import/no-cycle": "error",
-				"oxc/no-map-spread": "error",
-				"oxc/no-accumulating-spread": "error",
-				"typescript/require-array-sort-compare": "off",
-				"unicorn/prefer-array-index-of": "error",
-				"unicorn/no-useless-iterator-to-array": "error",
-				"unicorn/no-new-array": "off",
-				"eslint/prefer-destructuring": "error",
-				"eslint/func-names": ["error", "always"],
+	const oxlintrcJsonContent = `{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["import", "oxc", "unicorn", "jsdoc", "eslint", "typescript"],
+	"rules": {
+		"no-control-regex": "off",
+		"no-else-return": "error",
+		"no-lonely-if": "error",
+		"unicorn/no-lonely-if": "error",
+		"oxc/branches-sharing-code": "error",
+		"max-depth": "error",
+		"typescript/no-explicit-any": "error",
+		"typescript/restrict-template-expressions": "off",
+		"import/no-duplicates": "error",
+		"import/no-cycle": "error",
+		"oxc/no-map-spread": "error",
+		"oxc/no-accumulating-spread": "error",
+		"typescript/require-array-sort-compare": "off",
+		"unicorn/prefer-array-index-of": "error",
+		"unicorn/no-useless-iterator-to-array": "error",
+		"unicorn/no-new-array": "off",
+		"eslint/prefer-destructuring": "error",
+		"eslint/func-names": ["error", "always"],
+		"check-access": "warn"
+	},
+	"categories": {
+		"perf": "error"
+	}
+}
+`
 
-				"check-access": "warn",
-			},
-			categories: {
-				perf: "error",
-			},
-		},
-		null,
-		"\t",
-	)
-
-	const releaseItJsonContent = JSON.stringify(
-		{
-			$schema: "https://unpkg.com/release-it@21/schema/release-it.json",
-			hooks: {
-				"before:init": "bun prerelease",
-			},
-			plugins: {
-				"@release-it/keep-a-changelog": {
-					filename: "CHANGELOG.md",
-				},
-			},
-			github: {
-				release: true,
-				draft: false,
-				releaseName: "${version}",
-				skipChecks: true,
-			},
-			npm: {
-				publish: true,
-				skipChecks: true,
-			},
-			git: {
-				requireBranch: false,
-			},
-		},
-		null,
-		"\t",
-	)
+	const releaseItJsonContent = `{
+	"$schema": "https://unpkg.com/release-it@21/schema/release-it.json",
+	"hooks": {
+		"before:init": "bun prerelease"
+	},
+	"plugins": {
+		"@release-it/keep-a-changelog": {
+			"filename": "CHANGELOG.md"
+		}
+	},
+	"github": {
+		"release": true,
+		"draft": false,
+		"releaseName": "\${version}",
+		"skipChecks": true
+	},
+	"npm": {
+		"publish": true,
+		"skipChecks": true
+	},
+	"git": {
+		"requireBranch": false
+	}
+}
+`
 
 	const bunfigTomlContent = `[test]
 pathIgnorePatterns = ["out/**"]
@@ -457,104 +445,95 @@ linker = "isolated"
 globalStore = true
 `
 
-	const vscodeExtensionsJsonContent = JSON.stringify(
-		{
-			recommendations: ["oxc.oxc-vscode"],
-		},
-		null,
-		"\t",
-	)
+	const vscodeExtensionsJsonContent = `{
+	"recommendations": ["oxc.oxc-vscode"]
+}
+`
 
-	const vscodeSettingsJsonContent = JSON.stringify(
-		{
-			"editor.defaultFormatter": "oxc.oxc-vscode",
-			"files.eol": "\n",
-			"js/ts.format.enabled": false,
-			"js/ts.tsdk.path": "node_modules/typescript/lib",
-		},
-		null,
-		"\t",
-	)
+	const vscodeSettingsJsonContent = `{
+	"editor.defaultFormatter": "oxc.oxc-vscode",
+	"files.eol": "\n",
+	"js/ts.format.enabled": false,
+	"js/ts.tsdk.path": "node_modules/typescript/lib"
+}
+`
 
-	const vscodeTasksJsonContent = JSON.stringify(
+	const vscodeTasksJsonContent = `{
+	"tasks": [
 		{
-			tasks: [
-				{
-					detail: "bun run build",
-					icon: {
-						color: "terminal.ansiWhite",
-						id: "package",
-					},
-					label: "Build",
-					problemMatcher: "$tsc",
-					script: "build",
-					type: "bun",
-				},
-				{
-					args: ["run", "build", "--watch"],
-					command: "bun",
-					detail: "bun run build --watch",
-					icon: {
-						color: "terminal.ansiWhite",
-						id: "package",
-					},
-					label: "Build & Watch",
-					problemMatcher: "$tsc-watch",
-					type: "shell",
-				},
-				{
-					detail: "bun run lint",
-					icon: {
-						color: "terminal.ansiWhite",
-						id: "sparkle",
-					},
-					label: "Lint",
-					script: "lint",
-					type: "bun",
-				},
-				{
-					icon: {
-						color: "terminal.ansiRed",
-						id: "versions",
-					},
-					label: "Release major - any backward incompatible changes",
-					script: "release:major",
-					type: "bun",
-				},
-				{
-					icon: {
-						color: "terminal.ansiGreen",
-						id: "versions",
-					},
-					label: "Release minor - any new public functionality or deprecation",
-					script: "release:minor",
-					type: "bun",
-				},
-				{
-					icon: {
-						color: "terminal.ansiYellow",
-						id: "versions",
-					},
-					label: "Release patch - any backward compatible bug fixes",
-					script: "release:patch",
-					type: "bun",
-				},
-				{
-					detail: "bun run node --test out/**/*.test.js",
-					icon: {
-						color: "terminal.ansiWhite",
-						id: "check-all",
-					},
-					label: "Test",
-					script: "test",
-					type: "bun",
-				},
-			],
-			version: "2.0.0",
+			"detail": "bun run build",
+			"icon": {
+				"color": "terminal.ansiWhite",
+				"id": "package"
+			},
+			"label": "Build",
+			"problemMatcher": "$tsc",
+			"script": "build",
+			"type": "bun"
 		},
-		null,
-		"\t",
-	)
+		{
+			"args": ["run", "build", "--watch"],
+			"command": "bun",
+			"detail": "bun run build --watch",
+			"icon": {
+				"color": "terminal.ansiWhite",
+				"id": "package"
+			},
+			"label": "Build & Watch",
+			"problemMatcher": "$tsc-watch",
+			"type": "shell"
+		},
+		{
+			"detail": "bun run lint",
+			"icon": {
+				"color": "terminal.ansiWhite",
+				"id": "sparkle"
+			},
+			"label": "Lint",
+			"script": "lint",
+			"type": "bun"
+		},
+		{
+			"icon": {
+				"color": "terminal.ansiRed",
+				"id": "versions"
+			},
+			"label": "Release major - any backward incompatible changes",
+			"script": "release:major",
+			"type": "bun"
+		},
+		{
+			"icon": {
+				"color": "terminal.ansiGreen",
+				"id": "versions"
+			},
+			"label": "Release minor - any new public functionality or deprecation",
+			"script": "release:minor",
+			"type": "bun"
+		},
+		{
+			"icon": {
+				"color": "terminal.ansiYellow",
+				"id": "versions"
+			},
+			"label": "Release patch - any backward compatible bug fixes",
+			"script": "release:patch",
+			"type": "bun"
+		},
+		{
+			"detail": "bun run node --test out/**/*.test.js",
+			"icon": {
+				"color": "terminal.ansiWhite",
+				"id": "check-all"
+			},
+			"label": "Test",
+			"script": "test",
+			"type": "bun"
+		}
+	],
+	"version": "2.0.0"
+}
+`
 
 	const githubPrereleaseYmlContent = `name: Prerelease
 
@@ -613,7 +592,6 @@ on:
           - patch
           - minor
           - major
-          - no-increment
       dry_run:
         description: Enable dry run
         required: false
@@ -655,18 +633,10 @@ jobs:
 
       - name: Run release
         run: |
-          if [ "\${{ inputs.release_type }}" = "no-increment" ]; then
-            if [ "\${{ inputs.dry_run }}" = "true" ]; then
-              bun run --bun release-it --increment=false --ci --dry-run --git.requireCleanWorkingDir=false
-            else
-              bun run --bun release-it --increment=false --ci --git.requireCleanWorkingDir=false
-            fi
+          if [ "\${{ inputs.dry_run }}" = "true" ]; then
+            bun run release:\${{ inputs.release_type }} --ci --dry-run --git.requireCleanWorkingDir=false
           else
-            if [ "\${{ inputs.dry_run }}" = "true" ]; then
-              bun run release:\${{ inputs.release_type }} --ci --dry-run --git.requireCleanWorkingDir=false
-            else
-              bun run release:\${{ inputs.release_type }} --ci --git.requireCleanWorkingDir=false
-            fi
+            bun run release:\${{ inputs.release_type }} --ci --git.requireCleanWorkingDir=false
           fi
 `
 
@@ -740,7 +710,6 @@ and this project adheres to
 	if (install) {
 		const o = { cwd: outputDir, stdio: "inherit" } as const
 		execSync("bun install", o)
-		execSync("bun run fmt", o)
 		execSync("bun run prod", o)
 	}
 

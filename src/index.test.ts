@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, test } from "bun:test"
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs"
+import { spawnSync } from "node:child_process"
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { extname, join, resolve } from "node:path"
 
 import { createTargetPackage, runCli } from "./index.js"
 
@@ -152,6 +153,61 @@ describe("@view-ignored/create generator", () => {
 			expect(existsSync(join(targetDir, ".github/workflows/prerelease.yml"))).toBe(true)
 		} finally {
 			console.log = origLog
+		}
+	})
+
+	test("all generated files are already formatted according to oxfmt", () => {
+		const rootTmp = makeTmpDir()
+		const targetDir = join(rootTmp, "fmt-check-target")
+
+		const res = createTargetPackage({
+			install: false,
+			name: "fmt-check",
+			targetDir,
+		})
+
+		const oxfmtBin = resolve("node_modules/.bin/oxfmt")
+		const configPath = resolve(".oxfmtrc.json")
+		const unformattedDetails: string[] = []
+
+		for (const file of res.files) {
+			const fullPath = join(targetDir, file)
+			if (!existsSync(fullPath)) continue
+			const generated = readFileSync(fullPath, "utf8")
+
+			const proc = spawnSync(oxfmtBin, ["-c", configPath, "--list-different", fullPath], {
+				cwd: targetDir,
+				encoding: "utf8",
+			})
+
+			if (proc.status === 1 && proc.stdout.trim().length > 0) {
+				const ext = extname(file)
+				const tmpFile = fullPath + ".tmp" + ext
+				writeFileSync(tmpFile, generated, "utf8")
+				spawnSync(oxfmtBin, ["-c", configPath, tmpFile], { cwd: targetDir, encoding: "utf8" })
+				const formatted = readFileSync(tmpFile, "utf8")
+				rmSync(tmpFile, { force: true })
+
+				const diffLines: string[] = []
+				const genLines = generated.split("\n")
+				const fmtLines = formatted.split("\n")
+				const max = Math.max(genLines.length, fmtLines.length)
+				for (let i = 0; i < max; i++) {
+					if (genLines[i] !== fmtLines[i]) {
+						diffLines.push(
+							`  Line ${i + 1}:\n    - ${genLines[i] ?? "<EOF>"}\n    + ${fmtLines[i] ?? "<EOF>"}`,
+						)
+					}
+				}
+
+				unformattedDetails.push(
+					`File "${file}" is not properly formatted by oxfmt:\n` + diffLines.join("\n"),
+				)
+			}
+		}
+
+		if (unformattedDetails.length > 0) {
+			expect.unreachable(unformattedDetails.join("\n\n"))
 		}
 	})
 })
