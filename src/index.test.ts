@@ -44,8 +44,10 @@ describe("@view-ignored/create generator", () => {
 			".gitattributes",
 			".oxfmtrc.json",
 			".oxlintrc.json",
+			".release-it.json",
 			"bunfig.toml",
 			"README.md",
+			"CHANGELOG.md",
 			".vscode/extensions.json",
 			".vscode/settings.json",
 			".vscode/tasks.json",
@@ -79,8 +81,8 @@ describe("@view-ignored/create generator", () => {
 			"publishConfig",
 			"scripts",
 			"devDependencies",
-			"engines",
 			"peerDependencies",
+			"engines",
 		])
 
 		const indexTs = readFileSync(join(targetDir, "src/index.ts"), "utf8")

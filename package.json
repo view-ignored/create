@@ -37,12 +37,12 @@
 		"access": "public"
 	},
 	"scripts": {
-		"prerelease": "bun check && bun run test && bun run prod && bun run lint && bun run fmt --check && bun run ts-compat && bun run node-compat && bun publint --pack npm --strict",
+		"prerelease": "bun check && bun run test && bun run prod && bun run lint && bun run fmt --check ./ ./out/**/* && bun run ts-compat && bun run node-compat && bun publint --pack npm --strict",
 		"check": "bun tsc -p src --noEmit",
 		"dev": "bun tsc -p src",
-		"prod": "rm -rf out && bun tsc -p src/tsconfig.prod.json --emitDeclarationOnly && bun tsc -p src/tsconfig.prod.json --removeComments -d false && oxfmt out/**",
+		"prod": "rm -rf out && bun tsc -p src/tsconfig.prod.json --emitDeclarationOnly && bun tsc -p src/tsconfig.prod.json --removeComments -d false && oxfmt ./out/**/*",
 		"lint": "bun run oxlint --type-aware",
-		"fmt": "bun run oxfmt ./out/**/* ./",
+		"fmt": "bun run oxfmt",
 		"test": "bun test --timeout 5000 src",
 		"publint": "publint",
 		"node-compat": "bun run node-compat-22 && bun run node-compat-24",

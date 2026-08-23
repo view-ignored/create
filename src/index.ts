@@ -115,12 +115,12 @@ export function createTargetPackage(
 			},
 			scripts: {
 				prerelease:
-					"bun check && bun run test && bun run prod && bun run lint && bun run fmt --check && bun run ts-compat && bun run node-compat && bun publint --pack npm --strict",
+					"bun check && bun run test && bun run prod && bun run lint && bun run fmt --check ./ ./out/**/*  && bun run ts-compat && bun run node-compat && bun publint --pack npm --strict",
 				check: "bun tsc -p src --noEmit",
 				dev: "bun tsc -p src",
-				prod: "rm -rf out && bun tsc -p src/tsconfig.prod.json --emitDeclarationOnly && bun tsc -p src/tsconfig.prod.json --removeComments -d false && oxfmt out/**",
+				prod: "rm -rf out && bun tsc -p src/tsconfig.prod.json --emitDeclarationOnly && bun tsc -p src/tsconfig.prod.json --removeComments -d false && oxfmt ./out/**/*",
 				lint: "bun run oxlint --type-aware",
-				fmt: "bun run oxfmt ./out/**/* ./",
+				fmt: "bun run oxfmt",
 				test: "bun test --timeout 5000 src",
 				publint: "publint",
 				"node-compat": "bun run node-compat-22 && bun run node-compat-24",
@@ -682,7 +682,7 @@ const ctx = await scan({ target: ${functionName}() })
 
 ## License
 
-MIT
+MIT License.
 `
 	const changelogContent = `# Changelog
 
@@ -704,7 +704,7 @@ and this project adheres to
 		".gitignore": gitignoreContent,
 		".oxfmtrc.json": oxfmtrcJsonContent,
 		".oxlintrc.json": oxlintrcJsonContent,
-		".release-it.json": oxlintrcJsonContent,
+		".release-it.json": releaseItJsonContent,
 		".vscode/extensions.json": vscodeExtensionsJsonContent,
 		".vscode/settings.json": vscodeSettingsJsonContent,
 		".vscode/tasks.json": vscodeTasksJsonContent,
