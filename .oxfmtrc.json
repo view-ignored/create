@@ -1,0 +1,17 @@
+{
+	"$schema": "./node_modules/oxfmt/configuration_schema.json",
+	"semi": false,
+	"useTabs": true,
+	"objectWrap": "collapse",
+	"experimentalSortImports": {
+		"groups": [
+			"type-import",
+			"type-internal",
+			["type-parent", "type-sibling", "type-index"],
+			["value-builtin", "value-external"],
+			"value-internal",
+			["value-parent", "value-sibling", "value-index"],
+			"unknown"
+		]
+	}
+}

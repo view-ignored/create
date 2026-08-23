@@ -1,0 +1,81 @@
+{
+	"name": "@view-ignored/create",
+	"version": "0.1.0",
+	"description": "CLI generator to create public view-ignored target plugin packages.",
+	"keywords": [
+		"create",
+		"generator",
+		"target",
+		"view-ignored"
+	],
+	"bugs": {
+		"url": "https://github.com/view-ignored/create/issues"
+	},
+	"license": "MIT",
+	"author": "Mopsgamer",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/view-ignored/create.git"
+	},
+	"bin": {
+		"vign-create": "./out/index.js"
+	},
+	"directories": {
+		"lib": "out"
+	},
+	"files": [
+		"/out"
+	],
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./out/index.d.ts",
+			"default": "./out/index.js"
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"prerelease": "bun check && bun run test && bun run prod && bun run lint && bun run fmt --check && bun run ts-compat && bun run node-compat && bun publint --pack npm --strict",
+		"check": "bun tsc -p src --noEmit",
+		"dev": "bun tsc -p src",
+		"prod": "rm -rf out && bun tsc -p src/tsconfig.prod.json --emitDeclarationOnly && bun tsc -p src/tsconfig.prod.json --removeComments -d false && oxfmt --no-error-on-unmatched-pattern ./out/**/*.js ./out/**/*.d.ts",
+		"lint": "bun run oxlint --type-aware",
+		"fmt": "bun run oxfmt",
+		"test": "bun test --timeout 5000 src",
+		"publint": "publint",
+		"node-compat": "bun node-compat-22 && bun node-compat-24",
+		"ts-compat": "bun run ts-compat-6 && bun run ts-compat-5",
+		"node-compat-24": "bun node_modules/typescript6/bin/tsc -p src/tsconfig.prod24.json --noEmit",
+		"node-compat-22": "bun node_modules/typescript6/bin/tsc -p src/tsconfig.prod22.json --noEmit",
+		"ts-compat-5": "bun node_modules/typescript5/bin/tsc -p src/tsconfig.prod.json --noEmit --resolveJsonModule",
+		"ts-compat-6": "bun node_modules/typescript6/bin/tsc -p src/tsconfig.prod.json --noEmit",
+		"release:major": "bun run --bun release-it --increment=major",
+		"release:minor": "bun run --bun release-it --increment=minor",
+		"release:patch": "bun run --bun release-it --increment=patch"
+	},
+	"dependencies": {
+		"prompts": "^2.4.2"
+	},
+	"devDependencies": {
+		"@release-it/keep-a-changelog": "latest",
+		"@types/bun": "latest",
+		"@types/node": "npm:@types/node@latest",
+		"@types/node-22": "npm:@types/node@^22.20.1",
+		"@types/node-24": "npm:@types/node@^24.13.3",
+		"@types/prompts": "^2.4.9",
+		"bun-types": "latest",
+		"oxfmt": "latest",
+		"oxlint": "latest",
+		"oxlint-tsgolint": "latest",
+		"publint": "latest",
+		"release-it": "latest",
+		"typescript": "npm:typescript@^7.0.2",
+		"typescript5": "npm:typescript@~5.7.3",
+		"typescript6": "npm:typescript@^6.0.3"
+	},
+	"engines": {
+		"node": ">=22"
+	}
+}
