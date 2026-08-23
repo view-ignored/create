@@ -371,6 +371,35 @@ bin/**  eol=lf
 		"\t",
 	)
 
+	const releaseItJsonContent = JSON.stringify(
+		{
+			$schema: "https://unpkg.com/release-it@21/schema/release-it.json",
+			hooks: {
+				"before:init": "bun prerelease",
+			},
+			plugins: {
+				"@release-it/keep-a-changelog": {
+					filename: "CHANGELOG.md",
+				},
+			},
+			github: {
+				release: true,
+				draft: false,
+				releaseName: "${version}",
+				skipChecks: true,
+			},
+			npm: {
+				publish: true,
+				skipChecks: true,
+			},
+			git: {
+				requireBranch: false,
+			},
+		},
+		null,
+		"\t",
+	)
+
 	const bunfigTomlContent = `[test]
 pathIgnorePatterns = ["out/**"]
 coveragePathIgnorePatterns = ["src/testSelf*.test.ts"]
@@ -655,6 +684,18 @@ const ctx = await scan({ target: ${functionName}() })
 
 MIT
 `
+	const changelogContent = `# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+- Initial release.
+`
 
 	const fileContentsMap: Record<string, string> = {
 		".gitattributes": gitattributesContent,
@@ -663,10 +704,12 @@ MIT
 		".gitignore": gitignoreContent,
 		".oxfmtrc.json": oxfmtrcJsonContent,
 		".oxlintrc.json": oxlintrcJsonContent,
+		".release-it.json": oxlintrcJsonContent,
 		".vscode/extensions.json": vscodeExtensionsJsonContent,
 		".vscode/settings.json": vscodeSettingsJsonContent,
 		".vscode/tasks.json": vscodeTasksJsonContent,
 		"README.md": readmeContent,
+		"CHANGELOG.md": changelogContent,
 		"bunfig.toml": bunfigTomlContent,
 		"package.json": packageJsonContent,
 		"src/index.test.ts": indexTestTsContent,
