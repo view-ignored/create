@@ -103,6 +103,33 @@ describe("@view-ignored/create generator", () => {
 		expect(res.packageName).toBe("@view-ignored/target-awesome-tool")
 		expect(res.functionName).toBe("makeAwesomeTool")
 		expect(existsSync(join(targetDir, "bun.lock"))).toBe(false)
+
+		const pkgJson = JSON.parse(readFileSync(join(targetDir, "package.json"), "utf8"))
+		expect(pkgJson.peerDependencies["view-ignored"]).toBe("*")
+		expect(pkgJson.devDependencies["view-ignored"]).toBe("latest")
+		expect(pkgJson.dependencies).toBeUndefined()
+	})
+
+	test("creates package using view-ignored when type is view-ignored", () => {
+		const rootTmp = makeTmpDir()
+		const targetDir = join(rootTmp, "my-app")
+
+		const res = createTargetPackage({
+			install: false,
+			name: "my-app",
+			targetDir,
+			type: "view-ignored",
+		})
+		expect(res.packageName).toBe("my-app")
+		expect(res.functionName).toBe("scanPath")
+
+		const pkgJson = JSON.parse(readFileSync(join(targetDir, "package.json"), "utf8"))
+		expect(pkgJson.dependencies["view-ignored"]).toBe("latest")
+		expect(pkgJson.peerDependencies).toBeUndefined()
+
+		const indexTs = readFileSync(join(targetDir, "src/index.ts"), "utf8")
+		expect(indexTs).toContain('import { scan, type ScanContext } from "view-ignored"')
+		expect(indexTs).toContain('export async function scanPath(path = "."): Promise<ScanContext>')
 	})
 
 	test("throws error when package.json exists unless force is used", () => {
@@ -121,7 +148,7 @@ describe("@view-ignored/create generator", () => {
 		).not.toThrow()
 	})
 
-	test("runCli displays help with --help", () => {
+	test("runCli displays help with --help", async () => {
 		const logs: string[] = []
 		const origLog = console.log
 		console.log = (...args: unknown[]) => {
@@ -129,14 +156,14 @@ describe("@view-ignored/create generator", () => {
 		}
 
 		try {
-			runCli(["--help"])
+			await runCli(["--help"])
 			expect(logs.join("\n")).toContain("Usage: create-view-ignored")
 		} finally {
 			console.log = origLog
 		}
 	})
 
-	test("runCli creates target package from CLI positional args", () => {
+	test("runCli creates target package from CLI positional args", async () => {
 		const rootTmp = makeTmpDir()
 		const targetDir = join(rootTmp, "cli-target")
 
@@ -147,7 +174,7 @@ describe("@view-ignored/create generator", () => {
 		}
 
 		try {
-			runCli(["my-cli-target", targetDir, "--no-install"])
+			await runCli(["my-cli-target", targetDir, "--no-install", "--type", "target"])
 			expect(logs.join("\n")).toContain("Successfully created target package")
 			expect(existsSync(join(targetDir, "package.json"))).toBe(true)
 			expect(existsSync(join(targetDir, ".github/workflows/prerelease.yml"))).toBe(true)
@@ -156,31 +183,54 @@ describe("@view-ignored/create generator", () => {
 		}
 	})
 
+	test("runCli creates view-ignored package using --type view-ignored flag", async () => {
+		const rootTmp = makeTmpDir()
+		const targetDir = join(rootTmp, "cli-view-ignored")
+
+		const logs: string[] = []
+		const origLog = console.log
+		console.log = (...args: unknown[]) => {
+			logs.push(args.join(" "))
+		}
+
+		try {
+			await runCli(["cli-app", targetDir, "--no-install", "--type", "view-ignored"])
+			expect(logs.join("\n")).toContain("Successfully created target package")
+
+			const pkgJson = JSON.parse(readFileSync(join(targetDir, "package.json"), "utf8"))
+			expect(pkgJson.dependencies["view-ignored"]).toBe("latest")
+		} finally {
+			console.log = origLog
+		}
+	})
+
 	test("all generated files are already formatted according to oxfmt", () => {
 		const rootTmp = makeTmpDir()
-		const targetDir = join(rootTmp, "fmt-check-target")
-
-		const res = createTargetPackage({
-			install: false,
-			name: "fmt-check",
-			targetDir,
-		})
-
 		const oxfmtBin = resolve("node_modules/.bin/oxfmt")
 		const configPath = resolve(".oxfmtrc.json")
 		const unformattedDetails: string[] = []
 
-		for (const file of res.files) {
-			const fullPath = join(targetDir, file)
-			if (!existsSync(fullPath)) continue
-			const generated = readFileSync(fullPath, "utf8")
-
-			const proc = spawnSync(oxfmtBin, ["-c", configPath, "--list-different", fullPath], {
-				cwd: targetDir,
-				encoding: "utf8",
+		for (const packageType of ["target", "view-ignored"] as const) {
+			const targetDir = join(rootTmp, `fmt-check-${packageType}`)
+			const res = createTargetPackage({
+				install: false,
+				name: `fmt-check-${packageType}`,
+				targetDir,
+				type: packageType,
 			})
 
-			if (proc.status === 1 && proc.stdout.trim().length > 0) {
+			for (const file of res.files) {
+				const fullPath = join(targetDir, file)
+				if (!existsSync(fullPath)) continue
+				const generated = readFileSync(fullPath, "utf8")
+
+				const proc = spawnSync(oxfmtBin, ["-c", configPath, "--list-different", fullPath], {
+					cwd: targetDir,
+					encoding: "utf8",
+				})
+
+				if (proc.status !== 1 || proc.stdout.trim().length === 0) continue
+
 				const ext = extname(file)
 				const tmpFile = fullPath + ".tmp" + ext
 				writeFileSync(tmpFile, generated, "utf8")
@@ -193,15 +243,18 @@ describe("@view-ignored/create generator", () => {
 				const fmtLines = formatted.split("\n")
 				const max = Math.max(genLines.length, fmtLines.length)
 				for (let i = 0; i < max; i++) {
-					if (genLines[i] !== fmtLines[i]) {
+					const genLine = genLines[i]
+					const fmtLine = fmtLines[i]
+					if (genLine !== fmtLine) {
 						diffLines.push(
-							`  Line ${i + 1}:\n    - ${genLines[i] ?? "<EOF>"}\n    + ${fmtLines[i] ?? "<EOF>"}`,
+							`  Line ${i + 1}:\n    - ${genLine ?? "<EOF>"}\n    + ${fmtLine ?? "<EOF>"}`,
 						)
 					}
 				}
 
 				unformattedDetails.push(
-					`File "${file}" is not properly formatted by oxfmt:\n` + diffLines.join("\n"),
+					`[${packageType}] File "${file}" is not properly formatted by oxfmt:\n` +
+						diffLines.join("\n"),
 				)
 			}
 		}

@@ -55,12 +55,16 @@
 		"release:minor": "bun run --bun release-it --increment=minor",
 		"release:patch": "bun run --bun release-it --increment=patch"
 	},
+	"dependencies": {
+		"prompts": "^2.4.2"
+	},
 	"devDependencies": {
 		"@release-it/keep-a-changelog": "latest",
 		"@types/bun": "latest",
 		"@types/node": "npm:@types/node@latest",
 		"@types/node-22": "npm:@types/node@^22.20.1",
 		"@types/node-24": "npm:@types/node@^24.13.3",
+		"@types/prompts": "^2.4.9",
 		"bun-types": "latest",
 		"oxfmt": "latest",
 		"oxlint": "latest",

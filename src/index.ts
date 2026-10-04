@@ -2,6 +2,9 @@
 import { execSync } from "node:child_process"
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
+import prompts from "prompts"
+
+export type PackageType = "target" | "view-ignored"
 
 export interface CreateTargetPackageOptions {
 	/**
@@ -20,6 +23,10 @@ export interface CreateTargetPackageOptions {
 	 * Output target directory path.
 	 */
 	targetDir?: string
+	/**
+	 * Package generator type: "target" (default) or "view-ignored".
+	 */
+	type?: PackageType
 }
 
 export interface CreateTargetPackageResult {
@@ -50,9 +57,10 @@ function toPascalCase(str: string): string {
 		.join("")
 }
 
-function normalizePackageName(rawName: string): string {
+function normalizePackageName(rawName: string, type: PackageType = "target"): string {
 	const trimmed = rawName.trim().toLowerCase()
 	if (trimmed.startsWith("@") || trimmed.includes("view-ignored")) return trimmed
+	if (type === "view-ignored") return trimmed
 	return `@view-ignored/target-${trimmed}`
 }
 
@@ -66,10 +74,10 @@ function normalizeTargetName(rawName: string): string {
 export function createTargetPackage(
 	options: CreateTargetPackageOptions,
 ): CreateTargetPackageResult {
-	const { install = true, name } = options
-	const packageName = normalizePackageName(name)
+	const { install = true, name, type = "target" } = options
+	const packageName = normalizePackageName(name, type)
 	const targetName = normalizeTargetName(name)
-	const functionName = `make${targetName}`
+	const functionName = type === "view-ignored" ? "scanPath" : `make${targetName}`
 
 	const outputDir = resolve(options.targetDir || packageName)
 
@@ -84,94 +92,126 @@ export function createTargetPackage(
 
 	mkdirSync(resolve(outputDir, "src"), { recursive: true })
 
-	const packageJsonContent =
-		JSON.stringify(
-			{
-				name: packageName,
-				version: "0.1.0",
-				description: `view-ignored target plugin for ${targetName}.`,
-				keywords: [
-					"create",
-					targetName.toLowerCase(),
-					"generator",
-					"target",
-					"view-ignored",
-				].sort(),
-				bugs: {
-					url: `https://github.com/view-ignored/${packageName.replace(/^@view-ignored\//, "")}/issues`,
-				},
-				license: "MIT",
-				author: "@",
-				repository: {
-					type: "git",
-					url: `git+https://github.com/view-ignored/${packageName.replace(/^@view-ignored\//, "")}.git`,
-				},
-				directories: {
-					lib: "out",
-				},
-				files: ["/out"],
-				type: "module",
-				exports: {
-					".": {
-						types: "./out/index.d.ts",
-						default: "./out/index.js",
-					},
-				},
-				publishConfig: {
-					access: "public",
-				},
-				scripts: {
-					prerelease:
-						"bun check && bun run test && bun run prod && bun run lint && bun run fmt --check && bun run ts-compat && bun run node-compat && bun publint --pack npm --strict",
-					check: "bun tsc -p src --noEmit",
-					dev: "bun tsc -p src",
-					prod: "rm -rf out && bun tsc -p src/tsconfig.prod.json --emitDeclarationOnly && bun tsc -p src/tsconfig.prod.json --removeComments -d false && oxfmt ./out/**/*.js ./out/**/*.d.ts",
-					lint: "bun run oxlint --type-aware",
-					fmt: "bun run oxfmt",
-					test: "bun test --timeout 5000 src",
-					publint: "publint",
-					"node-compat": "bun run node-compat-22 && bun run node-compat-24",
-					"ts-compat": "bun run ts-compat-6 && bun run ts-compat-5",
-					"node-compat-24":
-						"node node_modules/typescript6/bin/tsc -p src/tsconfig.prod24.json --noEmit",
-					"node-compat-22":
-						"node node_modules/typescript6/bin/tsc -p src/tsconfig.prod22.json --noEmit",
-					"ts-compat-5":
-						"node node_modules/typescript5/bin/tsc -p src/tsconfig.prod.json --noEmit --resolveJsonModule",
-					"ts-compat-6": "node node_modules/typescript6/bin/tsc -p src/tsconfig.prod.json --noEmit",
-					"release:major": "bun run --bun release-it --increment=major",
-					"release:minor": "bun run --bun release-it --increment=minor",
-					"release:patch": "bun run --bun release-it --increment=patch",
-				},
-				devDependencies: {
-					"@release-it/keep-a-changelog": "latest",
-					"@types/bun": "latest",
-					"@types/node": "npm:@types/node@latest",
-					"@types/node-22": "npm:@types/node@^22.20.1",
-					"@types/node-24": "npm:@types/node@^24.13.3",
-					"bun-types": "latest",
-					oxfmt: "latest",
-					oxlint: "latest",
-					"oxlint-tsgolint": "latest",
-					publint: "latest",
-					"release-it": "latest",
-					typescript: "npm:typescript@^7.0.2",
-					typescript5: "npm:typescript@~5.7.3",
-					typescript6: "npm:typescript@^6.0.3",
-					"view-ignored": "latest",
-				},
-				peerDependencies: {
-					"view-ignored": "*",
-				},
-				engines: {
-					node: ">=22",
-				},
-			},
-			null,
-			"\t",
-		) + "\n"
+	const repoName = packageName.startsWith("@")
+		? packageName.split("/")[1] || packageName
+		: packageName
 
-	const indexTsContent = `import type { Target } from "view-ignored/targets"
+	const devDependencies: Record<string, string> = {
+		"@release-it/keep-a-changelog": "latest",
+		"@types/bun": "latest",
+		"@types/node": "npm:@types/node@latest",
+		"@types/node-22": "npm:@types/node@^22.20.1",
+		"@types/node-24": "npm:@types/node@^24.13.3",
+		"bun-types": "latest",
+		oxfmt: "latest",
+		oxlint: "latest",
+		"oxlint-tsgolint": "latest",
+		publint: "latest",
+		"release-it": "latest",
+		typescript: "npm:typescript@^7.0.2",
+		typescript5: "npm:typescript@~5.7.3",
+		typescript6: "npm:typescript@^6.0.3",
+	}
+
+	const dependencies: Record<string, string> = {}
+	const peerDependencies: Record<string, string> = {}
+
+	if (type === "view-ignored") {
+		dependencies["view-ignored"] = "latest"
+	} else {
+		devDependencies["view-ignored"] = "latest"
+		peerDependencies["view-ignored"] = "*"
+	}
+
+	const pkgObject: Record<string, unknown> = {
+		name: packageName,
+		version: "0.1.0",
+		description:
+			type === "view-ignored"
+				? `Package using view-ignored for ${targetName}.`
+				: `view-ignored target plugin for ${targetName}.`,
+		keywords: [
+			"create",
+			targetName.toLowerCase(),
+			"generator",
+			type === "view-ignored" ? "app" : "target",
+			"view-ignored",
+		].sort(),
+		bugs: {
+			url: `https://github.com/view-ignored/${repoName}/issues`,
+		},
+		license: "MIT",
+		author: "@",
+		repository: {
+			type: "git",
+			url: `git+https://github.com/view-ignored/${repoName}.git`,
+		},
+		directories: {
+			lib: "out",
+		},
+		files: ["/out"],
+		type: "module",
+		exports: {
+			".": {
+				types: "./out/index.d.ts",
+				default: "./out/index.js",
+			},
+		},
+		publishConfig: {
+			access: "public",
+		},
+		scripts: {
+			prerelease:
+				"bun check && bun run test && bun run prod && bun run lint && bun run fmt --check && bun run ts-compat && bun run node-compat && bun publint --pack npm --strict",
+			check: "bun tsc -p src --noEmit",
+			dev: "bun tsc -p src",
+			prod: "rm -rf out && bun tsc -p src/tsconfig.prod.json --emitDeclarationOnly && bun tsc -p src/tsconfig.prod.json --removeComments -d false && oxfmt ./out/**/*.js ./out/**/*.d.ts",
+			lint: "bun run oxlint --type-aware",
+			fmt: "bun run oxfmt",
+			test: "bun test --timeout 5000 src",
+			publint: "publint",
+			"node-compat": "bun run node-compat-22 && bun run node-compat-24",
+			"ts-compat": "bun run ts-compat-6 && bun run ts-compat-5",
+			"node-compat-24":
+				"node node_modules/typescript6/bin/tsc -p src/tsconfig.prod24.json --noEmit",
+			"node-compat-22":
+				"node node_modules/typescript6/bin/tsc -p src/tsconfig.prod22.json --noEmit",
+			"ts-compat-5":
+				"node node_modules/typescript5/bin/tsc -p src/tsconfig.prod.json --noEmit --resolveJsonModule",
+			"ts-compat-6": "node node_modules/typescript6/bin/tsc -p src/tsconfig.prod.json --noEmit",
+			"release:major": "bun run --bun release-it --increment=major",
+			"release:minor": "bun run --bun release-it --increment=minor",
+			"release:patch": "bun run --bun release-it --increment=patch",
+		},
+		devDependencies,
+	}
+
+	if (Object.keys(dependencies).length > 0) {
+		pkgObject.dependencies = dependencies
+	}
+
+	if (Object.keys(peerDependencies).length > 0) {
+		pkgObject.peerDependencies = peerDependencies
+	}
+
+	pkgObject.engines = {
+		node: ">=22",
+	}
+
+	const packageJsonContent = JSON.stringify(pkgObject, null, "\t") + "\n"
+
+	const indexTsContent =
+		type === "view-ignored"
+			? `import { scan, type ScanContext } from "view-ignored"
+
+/**
+ * Scans path using view-ignored.
+ */
+export async function ${functionName}(path = "."): Promise<ScanContext> {
+	return scan({ path })
+}
+`
+			: `import type { Target } from "view-ignored/targets"
 
 import {
 	extractNpmignore,
@@ -209,7 +249,20 @@ export function ${functionName}(): Target {
 }
 `
 
-	const indexTestTsContent = `import { describe, expect, test } from "bun:test"
+	const indexTestTsContent =
+		type === "view-ignored"
+			? `import { describe, expect, test } from "bun:test"
+
+import { ${functionName} } from "./index.js"
+
+describe("${functionName}", () => {
+	test("scans path using view-ignored", async () => {
+		const ctx = await ${functionName}()
+		expect(ctx).toBeDefined()
+	})
+})
+`
+			: `import { describe, expect, test } from "bun:test"
 import { scan } from "view-ignored"
 
 import { ${functionName} } from "./index.js"
@@ -721,7 +774,7 @@ and this project adheres to
 	}
 }
 
-export function runCli(args: string[] = process.argv.slice(2)): void {
+export async function runCli(args: string[] = process.argv.slice(2)): Promise<void> {
 	if (args.includes("-h") || args.includes("--help")) {
 		console.log(`
 Usage: create-view-ignored [target-name] [directory] [options]
@@ -733,6 +786,7 @@ Target name:
 Options:
   -f, --force         Overwrite existing directory if non-empty
   --no-install        Skip running 'bun install' after generating target package
+  --type <type>       Package type: 'target' or 'view-ignored' (default: 'target')
   -h, --help          Show this help message
 `)
 		return
@@ -740,9 +794,11 @@ Options:
 
 	let force = false
 	let install = true
+	let type: PackageType | undefined
 
 	const positionalArgs: string[] = []
-	for (const arg of args) {
+	for (let i = 0; i < args.length; i++) {
+		const arg = args[i]!
 		if (arg === "-f" || arg === "--force") {
 			force = true
 			continue
@@ -751,10 +807,64 @@ Options:
 			install = false
 			continue
 		}
+		if (arg === "--type") {
+			const next = args[i + 1]
+			if (next && !next.startsWith("-")) {
+				if (next === "target" || next === "view-ignored") {
+					type = next
+				}
+				i++
+			}
+			continue
+		}
+		if (arg.startsWith("--type=")) {
+			const val = arg.slice("--type=".length)
+			if (val === "target" || val === "view-ignored") {
+				type = val
+			}
+			continue
+		}
 		if (!arg.startsWith("-")) positionalArgs.push(arg)
 	}
 
-	const [name, targetDir] = positionalArgs
+	let [name, targetDir] = positionalArgs
+
+	if (!name || !type) {
+		const response = await prompts(
+			[
+				{
+					type: name ? null : "text",
+					name: "name",
+					message: "Package or target name:",
+					validate: (val: string) => (val.trim().length > 0 ? true : "Name is required"),
+				},
+				{
+					type: type ? null : "select",
+					name: "type",
+					message: "Select package type:",
+					choices: [
+						{ title: "target (plugin target package implementation)", value: "target" },
+						{ title: "view-ignored (package that uses view-ignored)", value: "view-ignored" },
+					],
+					initial: 0,
+				},
+			],
+			{
+				onCancel: () => {
+					process.exit(1)
+				},
+			},
+		)
+
+		const { name: resName, type: resType } = response
+		if (!name && typeof resName === "string") {
+			name = resName
+		}
+		if (!type && (resType === "target" || resType === "view-ignored")) {
+			type = resType
+		}
+	}
+
 	if (!name) {
 		throw new Error(
 			"Package name is required\n" +
@@ -764,7 +874,7 @@ Options:
 	}
 
 	try {
-		const result = createTargetPackage({ force, install, name, targetDir })
+		const result = createTargetPackage({ force, install, name, targetDir, type })
 		console.log(`Successfully created target package "${result.packageName}" in ${result.dir}`)
 	} catch (error) {
 		console.error(error instanceof Error ? error.message : error)
@@ -773,4 +883,4 @@ Options:
 }
 
 // Execute when invoked directly as CLI script
-if (import.meta.main) runCli()
+if (import.meta.main) await runCli()
