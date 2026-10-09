@@ -137,66 +137,49 @@ export function createTargetPackage(
 			type === "view-ignored" ? "app" : "target",
 			"view-ignored",
 		].sort(),
-		bugs: {
-			url: `https://github.com/view-ignored/${repoName}/issues`,
-		},
+		bugs: { url: `https://github.com/view-ignored/${repoName}/issues` },
 		license: "MIT",
 		author: "@",
-		repository: {
-			type: "git",
-			url: `git+https://github.com/view-ignored/${repoName}.git`,
-		},
-		directories: {
-			lib: "out",
-		},
+		repository: { type: "git", url: `git+https://github.com/view-ignored/${repoName}.git` },
+		directories: { lib: "out" },
 		files: ["/out"],
 		type: "module",
-		exports: {
-			".": {
-				types: "./out/index.d.ts",
-				default: "./out/index.js",
-			},
-		},
-		publishConfig: {
-			access: "public",
-		},
+		exports: { ".": { types: "./out/index.d.ts", default: "./out/index.js" } },
+		publishConfig: { access: "public" },
 		scripts: {
-			prerelease:
-				"bun check && bun run test && bun run prod && bun run lint && bun run fmt --check && bun run ts-compat && bun run node-compat && bun publint --pack npm --strict",
 			check: "bun tsc -p src --noEmit",
 			dev: "bun tsc -p src",
-			prod: "rm -rf out && bun tsc -p src/tsconfig.prod.json --emitDeclarationOnly && bun tsc -p src/tsconfig.prod.json --removeComments -d false && oxfmt ./out/**/*.js ./out/**/*.d.ts",
-			lint: "bun run oxlint --type-aware",
 			fmt: "bun run oxfmt",
-			test: "bun test --timeout 5000 src",
+			lint: "bun run oxlint --type-aware",
+			"node-compat": "bun node-compat-22 && bun node-compat-24",
+			"node-compat-22": "bun node_modules/typescript6/bin/tsc -p src/tsconfig.prod22.json --noEmit",
+			"node-compat-24": "bun node_modules/typescript6/bin/tsc -p src/tsconfig.prod24.json --noEmit",
+			prerelease:
+				"bun check && bun run test && bun run prod && bun run lint && bun run fmt --check && bun run ts-compat && bun run node-compat && bun publint --pack npm --strict",
+			prod: "rm -rf out && bun tsc -p src/tsconfig.prod.json --emitDeclarationOnly && bun tsc -p src/tsconfig.prod.json --removeComments -d false && oxfmt --no-error-on-unmatched-pattern ./out/**/*.js ./out/**/*.d.ts",
 			publint: "publint",
-			"node-compat": "bun run node-compat-22 && bun run node-compat-24",
-			"ts-compat": "bun run ts-compat-6 && bun run ts-compat-5",
-			"node-compat-24":
-				"node node_modules/typescript6/bin/tsc -p src/tsconfig.prod24.json --noEmit",
-			"node-compat-22":
-				"node node_modules/typescript6/bin/tsc -p src/tsconfig.prod22.json --noEmit",
-			"ts-compat-5":
-				"node node_modules/typescript5/bin/tsc -p src/tsconfig.prod.json --noEmit --resolveJsonModule",
-			"ts-compat-6": "node node_modules/typescript6/bin/tsc -p src/tsconfig.prod.json --noEmit",
 			"release:major": "bun run --bun release-it --increment=major",
 			"release:minor": "bun run --bun release-it --increment=minor",
 			"release:patch": "bun run --bun release-it --increment=patch",
+			test: "bun test --timeout 5000 src",
+			"ts-compat": "bun run ts-compat-6 && bun run ts-compat-5",
+			"ts-compat-5":
+				"bun node_modules/typescript5/bin/tsc -p src/tsconfig.prod.json --noEmit --resolveJsonModule",
+			"ts-compat-6": "bun node_modules/typescript6/bin/tsc -p src/tsconfig.prod.json --noEmit",
 		},
-		devDependencies,
 	}
 
 	if (Object.keys(dependencies).length > 0) {
 		pkgObject.dependencies = dependencies
 	}
 
+	pkgObject.devDependencies = devDependencies
+
 	if (Object.keys(peerDependencies).length > 0) {
 		pkgObject.peerDependencies = peerDependencies
 	}
 
-	pkgObject.engines = {
-		node: ">=22",
-	}
+	pkgObject.engines = { node: ">=22" }
 
 	const packageJsonContent = JSON.stringify(pkgObject, null, "\t") + "\n"
 
@@ -225,27 +208,13 @@ import {
  * Creates a view-ignored target for ${targetName}.
  */
 export function ${functionName}(): Target {
-	const extractors: Extractor[] = [
-		{
-			extract: extractNpmignore,
-			path: ".${targetName.toLowerCase()}ignore",
-		},
-	]
+	const extractors: Extractor[] = [{ extract: extractNpmignore, path: ".${targetName.toLowerCase()}ignore" }]
 
 	const internalRules: Rule[] = [
-		ruleCompile({
-			compiled: null,
-			excludes: true,
-			list: [".git", "node_modules"],
-		}),
+		ruleCompile({ compiled: null, excludes: true, list: [".git", "node_modules"] }),
 	]
 
-	return {
-		extractors,
-		ignores: ruleTest,
-		internalRules,
-		root: ".",
-	}
+	return { extractors, ignores: ruleTest, internalRules, root: "." }
 }
 `
 
@@ -281,28 +250,39 @@ describe("${functionName}", () => {
 
 	const tsconfigJsonContent = `{
 	"exclude": ["../node_modules"],
+	// Visit https://aka.ms/tsconfig to read more about this file
 	"compilerOptions": {
+		// File Layout
 		"rootDir": ".",
 		"outDir": "../out",
 
+		// Environment Settings
+		// See also https://aka.ms/tsconfig/module
 		"target": "esnext",
+		// For nodejs:
 		"lib": ["es2024"],
 		"types": ["node", "bun"],
 		"module": "nodenext",
 		"moduleResolution": "nodenext",
 
+		// Other Outputs
 		"sourceMap": true,
 		"declaration": true,
 		"declarationMap": true,
 
+		// Stricter Typechecking Options
 		"noUncheckedIndexedAccess": true,
 		"exactOptionalPropertyTypes": false,
 
+		// Style Options
 		"noImplicitReturns": true,
 		"noImplicitOverride": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
+		// "noFallthroughCasesInSwitch": true,
+		// "noPropertyAccessFromIndexSignature": true,
 
+		// Recommended Options
 		"strict": true,
 		"verbatimModuleSyntax": true,
 		"isolatedModules": true,
@@ -316,40 +296,40 @@ describe("${functionName}", () => {
 `
 
 	const tsconfigProdJsonContent = `{
-	"compilerOptions": {
-		"declaration": true,
-		"declarationMap": false,
-		"sourceMap": false,
-		"types": ["node"]
-	},
+	"extends": "./tsconfig.json",
 	"exclude": ["**/*.test.*"],
-	"extends": "./tsconfig.json"
+	// Visit https://aka.ms/tsconfig to read more about this file
+	"compilerOptions": {
+		"types": ["node"],
+		// Other Outputs
+		"sourceMap": false,
+		"declaration": true,
+		"declarationMap": false
+	}
 }
 `
 
 	const tsconfigProd22JsonContent = `{
+	"extends": "./tsconfig.prod.json",
+	// Visit https://aka.ms/tsconfig to read more about this file
 	"compilerOptions": {
-		"lib": ["es2024"],
 		"noEmit": true,
-		"paths": {
-			"node": ["../node_modules/@types/node-22"]
-		},
-		"target": "es2022"
-	},
-	"extends": "./tsconfig.prod.json"
+		"lib": ["es2024"],
+		"target": "es2022",
+		"paths": { "node": ["../node_modules/@types/node-22"] }
+	}
 }
 `
 
 	const tsconfigProd24JsonContent = `{
+	"extends": "./tsconfig.prod.json",
+	// Visit https://aka.ms/tsconfig to read more about this file
 	"compilerOptions": {
-		"lib": ["es2024"],
 		"noEmit": true,
-		"paths": {
-			"node": ["../node_modules/@types/node-24"]
-		},
-		"target": "es2024"
-	},
-	"extends": "./tsconfig.prod.json"
+		"lib": ["es2024"],
+		"target": "es2024",
+		"paths": { "node": ["../node_modules/@types/node-24"] }
+	}
 }
 `
 
@@ -357,6 +337,7 @@ describe("${functionName}", () => {
 out
 dist
 *.tgz
+coverage
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
@@ -371,6 +352,7 @@ bin/**  eol=lf
 	"$schema": "./node_modules/oxfmt/configuration_schema.json",
 	"semi": false,
 	"useTabs": true,
+	"objectWrap": "collapse",
 	"experimentalSortImports": {
 		"groups": [
 			"type-import",
@@ -399,45 +381,31 @@ bin/**  eol=lf
 		"typescript/restrict-template-expressions": "off",
 		"import/no-duplicates": "error",
 		"import/no-cycle": "error",
+		"typescript/dot-notation": "error",
+		"object-shorthand": "error",
 		"oxc/no-map-spread": "error",
 		"oxc/no-accumulating-spread": "error",
 		"typescript/require-array-sort-compare": "off",
 		"unicorn/prefer-array-index-of": "error",
 		"unicorn/no-useless-iterator-to-array": "error",
 		"unicorn/no-new-array": "off",
+		"unicorn/prefer-ternary": "error",
+		"unicorn/prefer-logical-operator-over-ternary": "error",
 		"eslint/prefer-destructuring": "error",
 		"eslint/func-names": ["error", "always"],
-		"check-access": "warn"
+		"check-access": "error"
 	},
-	"categories": {
-		"perf": "error"
-	}
+	"categories": { "perf": "error" }
 }
 `
 
 	const releaseItJsonContent = `{
-	"$schema": "https://unpkg.com/release-it@21/schema/release-it.json",
-	"hooks": {
-		"before:init": "bun prerelease"
-	},
-	"plugins": {
-		"@release-it/keep-a-changelog": {
-			"filename": "CHANGELOG.md"
-		}
-	},
-	"github": {
-		"release": true,
-		"draft": false,
-		"releaseName": "\${version}",
-		"skipChecks": true
-	},
-	"npm": {
-		"publish": true,
-		"skipChecks": true
-	},
-	"git": {
-		"requireBranch": false
-	}
+	"$schema": "https://unpkg.com/release-it@19/schema/release-it.json",
+	"hooks": { "before:init": "bun prerelease" },
+	"plugins": { "@release-it/keep-a-changelog": { "filename": "CHANGELOG.md" } },
+	"github": { "release": true, "draft": false, "releaseName": "\${version}", "skipChecks": true },
+	"npm": { "publish": true, "skipChecks": true },
+	"git": { "requireBranch": false }
 }
 `
 
@@ -498,93 +466,15 @@ linker = "isolated"
 globalStore = true
 `
 
-	const vscodeExtensionsJsonContent = `{
-	"recommendations": ["oxc.oxc-vscode"]
-}
+	const vscodeExtensionsJsonContent = `{ "recommendations": ["oxc.oxc-vscode", "typescriptteam.native-preview"] }
 `
 
 	const vscodeSettingsJsonContent = `{
-	"editor.defaultFormatter": "oxc.oxc-vscode",
-	"files.eol": "\n",
-	"js/ts.format.enabled": false,
-	"js/ts.tsdk.path": "node_modules/typescript/lib"
-}
-`
-
-	const vscodeTasksJsonContent = `{
-	"tasks": [
-		{
-			"detail": "bun run build",
-			"icon": {
-				"color": "terminal.ansiWhite",
-				"id": "package"
-			},
-			"label": "Build",
-			"problemMatcher": "$tsc",
-			"script": "build",
-			"type": "bun"
-		},
-		{
-			"args": ["run", "build", "--watch"],
-			"command": "bun",
-			"detail": "bun run build --watch",
-			"icon": {
-				"color": "terminal.ansiWhite",
-				"id": "package"
-			},
-			"label": "Build & Watch",
-			"problemMatcher": "$tsc-watch",
-			"type": "shell"
-		},
-		{
-			"detail": "bun run lint",
-			"icon": {
-				"color": "terminal.ansiWhite",
-				"id": "sparkle"
-			},
-			"label": "Lint",
-			"script": "lint",
-			"type": "bun"
-		},
-		{
-			"icon": {
-				"color": "terminal.ansiRed",
-				"id": "versions"
-			},
-			"label": "Release major - any backward incompatible changes",
-			"script": "release:major",
-			"type": "bun"
-		},
-		{
-			"icon": {
-				"color": "terminal.ansiGreen",
-				"id": "versions"
-			},
-			"label": "Release minor - any new public functionality or deprecation",
-			"script": "release:minor",
-			"type": "bun"
-		},
-		{
-			"icon": {
-				"color": "terminal.ansiYellow",
-				"id": "versions"
-			},
-			"label": "Release patch - any backward compatible bug fixes",
-			"script": "release:patch",
-			"type": "bun"
-		},
-		{
-			"detail": "bun run node --test out/**/*.test.js",
-			"icon": {
-				"color": "terminal.ansiWhite",
-				"id": "check-all"
-			},
-			"label": "Test",
-			"script": "test",
-			"type": "bun"
-		}
-	],
-	"version": "2.0.0"
+	"javascript.format.enable": false,
+	"typescript.format.enable": false,
+	"files.eol": "\\n",
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"editor.defaultFormatter": "oxc.oxc-vscode"
 }
 `
 
@@ -706,8 +596,8 @@ bun add ${packageName} view-ignored
 ## Usage
 
 \`\`\`ts
-import { scan } from "view-ignored"
 import { ${functionName} } from "${packageName}"
+import { scan } from "view-ignored"
 
 const ctx = await scan({ target: ${functionName}() })
 \`\`\`
@@ -739,7 +629,6 @@ and this project adheres to
 		".release-it.json": releaseItJsonContent,
 		".vscode/extensions.json": vscodeExtensionsJsonContent,
 		".vscode/settings.json": vscodeSettingsJsonContent,
-		".vscode/tasks.json": vscodeTasksJsonContent,
 		"README.md": readmeContent,
 		"CHANGELOG.md": changelogContent,
 		"bunfig.toml": bunfigTomlContent,
@@ -766,12 +655,7 @@ and this project adheres to
 		execSync("bun run prod", o)
 	}
 
-	return {
-		dir: outputDir,
-		files,
-		functionName,
-		packageName,
-	}
+	return { dir: outputDir, files, functionName, packageName }
 }
 
 export async function runCli(args: string[] = process.argv.slice(2)): Promise<void> {
