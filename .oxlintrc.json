@@ -12,18 +12,19 @@
 		"typescript/restrict-template-expressions": "off",
 		"import/no-duplicates": "error",
 		"import/no-cycle": "error",
+		"typescript/dot-notation": "error",
+		"object-shorthand": "error",
 		"oxc/no-map-spread": "error",
 		"oxc/no-accumulating-spread": "error",
 		"typescript/require-array-sort-compare": "off",
 		"unicorn/prefer-array-index-of": "error",
 		"unicorn/no-useless-iterator-to-array": "error",
 		"unicorn/no-new-array": "off",
+		"unicorn/prefer-ternary": "error",
+		"unicorn/prefer-logical-operator-over-ternary": "error",
 		"eslint/prefer-destructuring": "error",
 		"eslint/func-names": ["error", "always"],
-
-		"check-access": "warn"
+		"check-access": "error"
 	},
-	"categories": {
-		"perf": "error"
-	}
+	"categories": { "perf": "error" }
 }

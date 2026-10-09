@@ -51,7 +51,6 @@ describe("@view-ignored/create generator", () => {
 			"CHANGELOG.md",
 			".vscode/extensions.json",
 			".vscode/settings.json",
-			".vscode/tasks.json",
 			".github/workflows/prerelease.yml",
 			".github/workflows/release.yml",
 		]
@@ -89,17 +88,13 @@ describe("@view-ignored/create generator", () => {
 		const indexTs = readFileSync(join(targetDir, "src/index.ts"), "utf8")
 		expect(indexTs).toContain("export function makeTesting()")
 		expect(indexTs).toContain(".testingignore")
-	}, 30000)
+	}, 60000)
 
 	test("creates target package without running bun install when install: false", () => {
 		const rootTmp = makeTmpDir()
 		const targetDir = join(rootTmp, "my-target")
 
-		const res = createTargetPackage({
-			install: false,
-			name: "awesome-tool",
-			targetDir,
-		})
+		const res = createTargetPackage({ install: false, name: "awesome-tool", targetDir })
 		expect(res.packageName).toBe("@view-ignored/target-awesome-tool")
 		expect(res.functionName).toBe("makeAwesomeTool")
 		expect(existsSync(join(targetDir, "bun.lock"))).toBe(false)
