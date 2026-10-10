@@ -1,6 +1,6 @@
 {
 	"name": "@view-ignored/create",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "CLI generator to create public view-ignored target plugin packages.",
 	"keywords": [
 		"create",
