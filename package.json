@@ -18,7 +18,7 @@
 		"url": "git+https://github.com/view-ignored/create.git"
 	},
 	"bin": {
-		"vign-create": "./out/index.js"
+		"vign-create": "out/index.js"
 	},
 	"directories": {
 		"lib": "out"

@@ -690,7 +690,7 @@ Usage: create-view-ignored [target-name] [directory] [options]
 
 Target name:
   'test' creates '@view-ignored/target-test/'
-  'view-ignored-test' creates 'view-ignored-test'
+  'view-ignored-test' creates 'view-ignored-test/'
 
 Options:
   -f, --force         Overwrite existing directory if non-empty
@@ -778,7 +778,7 @@ Options:
 		throw new Error(
 			"Package name is required\n" +
 				"'test' creates '@view-ignored/target-test/'\n" +
-				"'view-ignored-test' creates 'view-ignored-test'",
+				"'view-ignored-test' creates 'view-ignored-test/'",
 		)
 	}
 
