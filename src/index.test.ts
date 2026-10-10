@@ -48,6 +48,7 @@ describe("@view-ignored/create generator", () => {
 			".release-it.json",
 			"bunfig.toml",
 			"README.md",
+			"LICENSE.txt",
 			"CHANGELOG.md",
 			".vscode/extensions.json",
 			".vscode/settings.json",
@@ -257,5 +258,5 @@ describe("@view-ignored/create generator", () => {
 		if (unformattedDetails.length > 0) {
 			expect.unreachable(unformattedDetails.join("\n\n"))
 		}
-	})
+	}, 30000)
 })

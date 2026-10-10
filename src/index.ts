@@ -583,7 +583,7 @@ jobs:
           fi
 `
 
-	const readmeContent = `# ${packageName}
+	const readmeContent = `# ${packageName} [![version](https://npmx.dev/api/registry/badge/version/${packageName})](https://npmx.dev/package/${packageName}) [![view-ignored](https://npmx.dev/api/registry/badge/version/view-ignored)](https://npmx.dev/package/view-ignored)
 
 view-ignored target plugin for ${targetName}.
 
@@ -604,7 +604,29 @@ const ctx = await scan({ target: ${functionName}() })
 
 ## License
 
-MIT License.
+MIT License. See [LICENSE.txt](LICENSE.txt) for details.
+`
+	const licenseTxtContent = `MIT License
+
+Copyright (c) 2024 Mopsgamer
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 `
 	const changelogContent = `# Changelog
 
@@ -630,6 +652,7 @@ and this project adheres to
 		".vscode/extensions.json": vscodeExtensionsJsonContent,
 		".vscode/settings.json": vscodeSettingsJsonContent,
 		"README.md": readmeContent,
+		"LICENSE.txt": licenseTxtContent,
 		"CHANGELOG.md": changelogContent,
 		"bunfig.toml": bunfigTomlContent,
 		"package.json": packageJsonContent,
@@ -651,7 +674,7 @@ and this project adheres to
 
 	if (install) {
 		const o = { cwd: outputDir, stdio: "inherit" } as const
-		execSync("bun install", o)
+		execSync("bun install --prefer-offline", o)
 		execSync("bun run prod", o)
 	}
 

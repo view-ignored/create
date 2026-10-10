@@ -1,6 +1,6 @@
 <div align="left">
 
-# @view-ignored/create [![npm-version](https://img.shields.io/npm/v/view-ignored.svg?label=view-ignored)](https://www.npmjs.com/package/view-ignored) [![wiki](https://img.shields.io/badge/docs-wiki-blue)](https://github.com/view-ignored/view-ignored/wiki/How-to-create-plugin-public-npm-package)
+# @view-ignored/create [![version](https://npmx.dev/api/registry/badge/version/@view-ignored/create)](https://npmx.dev/package/@view-ignored/create) [![view-ignored](https://npmx.dev/api/registry/badge/version/view-ignored)](https://npmx.dev/package/view-ignored) [![wiki](https://img.shields.io/badge/docs-wiki-blue)](https://github.com/view-ignored/view-ignored/wiki/How-to-create-plugin-public-npm-package)
 
 </h1>
 
